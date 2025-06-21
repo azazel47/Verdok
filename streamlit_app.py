@@ -10,8 +10,17 @@ import gdown
 from io import BytesIO
 import urllib3
 import json
+import datetime
 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
+
+def get_last_modified(filepath):
+    try:
+        timestamp = os.path.getmtime(filepath)
+        dt = datetime.datetime.fromtimestamp(timestamp)
+        return dt.strftime("%Y-%m-%d %H:%M:%S")
+    except Exception as e:
+        return f"❌ Gagal membaca waktu modifikasi: {e}"
 
 def dms_to_dd(degree, minute, second, direction):
     dd = degree + minute / 60 + second / 3600
@@ -116,6 +125,8 @@ def download_sedimentasi_shapefile():
         return None
 
 st.title("Konversi Koordinat dan Analisis Spasial - Verdok")
+update_time = get_last_modified("kkprl.json")
+st.markdown(f"🕒 **Data KKPRL terakhir diperbarui:** `{update_time}`")
 
 format_pilihan = st.radio("Pilih format data koordinat:", ("OSS-UTM", "General-Decimal Degree"))
 
