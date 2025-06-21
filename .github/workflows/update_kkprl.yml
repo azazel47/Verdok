@@ -46,3 +46,4 @@ jobs:
           git push origin main
         else
           echo "✅ Tidak ada perubahan pada kkprl.json"
+        fi
