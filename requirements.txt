@@ -1,0 +1,11 @@
+streamlit
+pandas
+geopandas
+shapely
+openpyxl
+requests
+urllib3
+fiona
+pyproj
+rtree
+gdown
