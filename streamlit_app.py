@@ -142,8 +142,8 @@ kkprl_gdf = load_kkprl_json()
 
 if uploaded_file and nama_file:
     df = pd.read_excel(uploaded_file)
-    if df.shape[0] > 100:
-        st.warning("Koordinat Lebih dari 100.")
+    if df.shape[0] > 200:
+        st.warning("Koordinat Lebih dari 200.")
         df = df.head(50)
 
     if format_pilihan == "OSS-UTM":
