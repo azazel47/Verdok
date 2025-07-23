@@ -133,20 +133,23 @@ format_pilihan = st.radio("Pilih format data koordinat:", ("OSS-UTM", "General-D
 uploaded_file = st.file_uploader("Unggah file Excel", type=["xlsx"])
 shp_type = st.radio("Pilih tipe shapefile yang ingin dibuat:", ("Poligon (Polygon)", "Titik (Point)"))
 nama_file = st.text_input("➡️Masukkan nama file shapefile (tanpa ekstensi)⬅️", value="nama_shapefile")
-col1, col2, col3 = st.columns(3)
+col1, col2, col3, col4 = st.columns(4)
 with col1:
     cek_sedimentasi = st.checkbox("Sedimentasi 🏖️")
 with col2:
     cek_pertambangan = st.checkbox("Pertambangan ⛏️")
 with col3:
     cek_migas = st.checkbox("MIGAS🛢️")
+with col4:
+    cek_rumpon = st.checkbox("Rumpon🪝")
     
 konservasi_gdf = get_kawasan_konservasi_from_arcgis()
 mil12_gdf = download_shapefile_from_gdrive("https://drive.google.com/file/d/16MnH27AofcSSr45jTvmopOZx4CMPxMKs/view?usp=sharing")
 sedimen_gdf = download_sedimentasi_shapefile() if cek_sedimentasi else None
 kkprl_gdf = load_kkprl_json()
 tambang_gdf = download_shapefile_from_gdrive("https://drive.google.com/file/d/1hDyyW-1ueyj2qDvk3yjiTPEMNgjpTMiE/view?usp=sharing") if cek_pertambangan else None
-migas_dbf = download_shapefile_from_gdrive("https://drive.google.com/file/d/3lOZQ2pmlnsgX5d8Xk9WbqzcmpBs/view?usp=sharing") if cek_pertambangan else None
+migas_dbf = download_shapefile_from_gdrive("https://drive.google.com/file/d/3lOZQ2pmlnsgX5d8Xk9WbqzcmpBs/view?usp=sharing") if cek_migas else None
+rumpon_dbf = download_shapefile_from_gdrive("https://drive.google.com/file/d/1vUQArCq7A6iDEJ3AHyMAOtONAMYR2dI-/view?usp=sharing") if cek_rumpon else None
 
 if uploaded_file and nama_file:
     df = pd.read_excel(uploaded_file)
@@ -219,7 +222,16 @@ if uploaded_file and nama_file:
                 st.write(f"Berada di WK milik: {wk_string}")
             else:
                 st.warning("Titik di luar area WK ⚠️⚠️")   
-
+                
+        if rumpon_gdf is not None:
+            joined_rumpon = gpd.sjoin(gdf, rumpon_gdf[['ID_Rumpon','geometry']], how='left', predicate='within')
+            points_in_rumpon = joined_rumpon[~joined_rumpon['oprblk'].isna()]
+            if not points_in_rumpon.empty:
+                rumpon_string = ", ".join(points_in_rumpon['ID_Rumpon'].dropna().unique())
+                st.success(f"{len(points_in_rumpon)} Titik berada di dalam grid Rumpon ✅✅")
+                st.write(f"Berada di grid rumpon kode: {rumpon_string}")
+            else:
+                st.warning("Titik di luar area grid Rumpon ⚠️⚠️")  
     else:
         coords = list(zip(df['longitude'], df['latitude']))
         if coords[0] != coords[-1]:
@@ -269,11 +281,18 @@ if uploaded_file and nama_file:
         if migas_gdf is not None:
             overlay_migas = gpd.overlay(gdf, migas_gdf[['oprblk', 'geometry']], how='intersection')
             if not overlay_migas.empty:
-                wk_string = ", ".join(overlay_mgias['oprblk'].dropna().unique())
+                wk_string = ", ".join(overlay_migas['oprblk'].dropna().unique())
                 st.success(f"Poligon berada di dalam WK: {wk_string} ✅✅")
             else:
                 st.warning("Poligon di luar WK ⚠️⚠️")
-
+                
+        if rumpon_gdf is not None:
+            overlay_rumpon = gpd.overlay(gdf, rumpon_gdf[['ID_Rumpon', 'geometry']], how='intersection')
+            if not overlay_rumpon.empty:
+                rumpon_string = ", ".join(overlay_rumpon['ID_Rumpon'].dropna().unique())
+                st.success(f"Poligon berada di area grid rumpon kode: {rumpon_string} ✅✅")
+            else:
+                st.warning("Poligon di luar grid rumpon ⚠️⚠️")
     
     st.subheader("Hasil Konversi")
     st.dataframe(df[['id', 'longitude', 'latitude']])
