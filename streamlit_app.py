@@ -135,7 +135,7 @@ st.set_page_config(
 
 # Judul halaman di tengah
 st.markdown(
-    "<h1 style='text-align: center;'>Konversi Koordinat dan Analisis Spasial - Verdok</h1>",
+    "<h1 style='text-align: center;'>Konversi Koordinat dan Analisis Spasial - Verdok (Ver 1.2)</h1>",
     unsafe_allow_html=True
 )
 
