@@ -214,7 +214,7 @@ if uploaded_file and nama_file:
             joined_migas = gpd.sjoin(gdf, migas_gdf[['oprblk','geometry']], how='left', predicate='within')
             points_in_migas = joined_migas[~joined_migas['oprblk'].isna()]
             if not points_in_migas.empty:
-                wk_string = ", ".join(points_in_mil[oprblk '].dropna().unique())
+                wk_string = ", ".join(points_in_migas['oprblk '].dropna().unique())
                 st.success(f"{len(points_in_migas)} Titik berada di dalam WK ✅✅")
                 st.write(f"Berada di WK milik: {wk_string}")
             else:
