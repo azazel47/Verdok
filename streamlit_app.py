@@ -133,17 +133,20 @@ format_pilihan = st.radio("Pilih format data koordinat:", ("OSS-UTM", "General-D
 uploaded_file = st.file_uploader("Unggah file Excel", type=["xlsx"])
 shp_type = st.radio("Pilih tipe shapefile yang ingin dibuat:", ("Poligon (Polygon)", "Titik (Point)"))
 nama_file = st.text_input("➡️Masukkan nama file shapefile (tanpa ekstensi)⬅️", value="nama_shapefile")
-col1, col2 = st.columns(2)
+col1, col2, col3 = st.columns(3)
 with col1:
     cek_sedimentasi = st.checkbox("Sedimentasi 🏖️")
 with col2:
     cek_pertambangan = st.checkbox("Pertambangan ⛏️")
-
+with col3:
+    cek_migas = st.checkbox("MIGAS🛢️")
+    
 konservasi_gdf = get_kawasan_konservasi_from_arcgis()
 mil12_gdf = download_shapefile_from_gdrive("https://drive.google.com/file/d/16MnH27AofcSSr45jTvmopOZx4CMPxMKs/view?usp=sharing")
 sedimen_gdf = download_sedimentasi_shapefile() if cek_sedimentasi else None
 kkprl_gdf = load_kkprl_json()
 tambang_gdf = download_shapefile_from_gdrive("https://drive.google.com/file/d/1hDyyW-1ueyj2qDvk3yjiTPEMNgjpTMiE/view?usp=sharing") if cek_pertambangan else None
+migas_dbf = download_shapefile_from_gdrive("https://drive.google.com/file/d/3lOZQ2pmlnsgX5d8Xk9WbqzcmpBs/view?usp=sharing") if cek_pertambangan else None
 
 if uploaded_file and nama_file:
     df = pd.read_excel(uploaded_file)
@@ -201,11 +204,21 @@ if uploaded_file and nama_file:
             joined_tambang = gpd.sjoin(gdf, tambang_gdf[['nama_usaha','geometry']], how='left', predicate='within')
             points_in_tambang = joined_tambang[~joined_tambang['nama_usaha'].isna()]
             if not points_in_tambang.empty:
-                iup_string = ", ".join(points_in_mil['nama_usaha'].dropna().unique())
+                iup_string = ", ".join(points_in_tambang['nama_usaha'].dropna().unique())
                 st.success(f"{len(points_in_tambang)} Titik berada di dalam WIUP ✅✅")
                 st.write(f"Berada di WIUP milik: {iup_string}")
             else:
                 st.warning("Titik di luar area WIUP ⚠️⚠️")    
+                
+        if migas_gdf is not None:
+            joined_migas = gpd.sjoin(gdf, migas_gdf[['oprblk','geometry']], how='left', predicate='within')
+            points_in_migas = joined_migas[~joined_migas['oprblk'].isna()]
+            if not points_in_migas.empty:
+                wk_string = ", ".join(points_in_mil[oprblk '].dropna().unique())
+                st.success(f"{len(points_in_migas)} Titik berada di dalam WK ✅✅")
+                st.write(f"Berada di WK milik: {wk_string}")
+            else:
+                st.warning("Titik di luar area WK ⚠️⚠️")   
 
     else:
         coords = list(zip(df['longitude'], df['latitude']))
@@ -247,12 +260,21 @@ if uploaded_file and nama_file:
     
         if tambang_gdf is not None:
             overlay_iup = gpd.overlay(gdf, tambang_gdf[['nama_usaha', 'geometry']], how='intersection')
-            if not overlay_mil.empty:
+            if not overlay_iup.empty:
                 iup_string = ", ".join(overlay_iup['nama_usaha'].dropna().unique())
                 st.success(f"Poligon berada di dalam WIUP: {iup_string} ✅✅")
             else:
                 st.warning("Poligon di luar WIUP ⚠️⚠️")
-  
+                
+        if migas_gdf is not None:
+            overlay_migas = gpd.overlay(gdf, migas_gdf[['oprblk', 'geometry']], how='intersection')
+            if not overlay_migas.empty:
+                wk_string = ", ".join(overlay_mgias['oprblk'].dropna().unique())
+                st.success(f"Poligon berada di dalam WK: {wk_string} ✅✅")
+            else:
+                st.warning("Poligon di luar WK ⚠️⚠️")
+
+    
     st.subheader("Hasil Konversi")
     st.dataframe(df[['id', 'longitude', 'latitude']])
 
