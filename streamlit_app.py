@@ -133,12 +133,17 @@ format_pilihan = st.radio("Pilih format data koordinat:", ("OSS-UTM", "General-D
 uploaded_file = st.file_uploader("Unggah file Excel", type=["xlsx"])
 shp_type = st.radio("Pilih tipe shapefile yang ingin dibuat:", ("Poligon (Polygon)", "Titik (Point)"))
 nama_file = st.text_input("➡️Masukkan nama file shapefile (tanpa ekstensi)⬅️", value="nama_shapefile")
-cek_sedimentasi = st.checkbox("Sedimentasi 🏖️")
+col1, col2 = st.columns(2)
+with col1:
+    cek_sedimentasi = st.checkbox("Sedimentasi 🏖️")
+with col2:
+    cek_pertambangan = st.checkbox("Pertambangan ⛏️")
 
 konservasi_gdf = get_kawasan_konservasi_from_arcgis()
 mil12_gdf = download_shapefile_from_gdrive("https://drive.google.com/file/d/16MnH27AofcSSr45jTvmopOZx4CMPxMKs/view?usp=sharing")
 sedimen_gdf = download_sedimentasi_shapefile() if cek_sedimentasi else None
 kkprl_gdf = load_kkprl_json()
+tambang_gdf = download_shapefile_from_gdrive("https://drive.google.com/file/d/1vysvEsJIiuTPGq1JgdqHMsBucLOGcFn8/view?usp=sharing") if cek_pertambangan else None
 
 if uploaded_file and nama_file:
     df = pd.read_excel(uploaded_file)
@@ -191,6 +196,16 @@ if uploaded_file and nama_file:
                 st.success(f"{len(points_in_sedimen)} Titik berada di Lokasi Prioritas Sedimentasi ✅✅")
             else:
                 st.warning("Titik diluar Lokasi Prioritas Sedimentasi ⚠️⚠️")
+                
+        if tambang_gdf is not None:
+            joined_tambang = gpd.sjoin(gdf, tambang_gdf[['nama_usaha','geometry']], how='left', predicate='within')
+            points_in_tambang = joined_tambang[~joined_tambang['nama_usaha'].isna()]
+            if not points_in_tambang.empty:
+                iup_string = ", ".join(points_in_mil['nama_usaha'].dropna().unique())
+                st.success(f"{len(points_in_tambang)} Titik berada di dalam WIUP ✅✅")
+                st.write(f"Berada di WIUP milik: {iup_string}")
+            else:
+                st.warning("Titik di luar area WIUP ⚠️⚠️")    
 
     else:
         coords = list(zip(df['longitude'], df['latitude']))
@@ -229,7 +244,15 @@ if uploaded_file and nama_file:
                 st.success("Poligon berada di Lokasi Prioritas Sedimentasi ✅✅")
             else:
                 st.warning("Poligon diuar Lokasi Prioritas Sedimentasi ⚠️⚠️")
-
+    
+        if tambang_gdf is not None:
+            overlay_iup = gpd.overlay(gdf, tambang_gdf[['nama_usaha', 'geometry']], how='intersection')
+            if not overlay_mil.empty:
+                iup_string = ", ".join(overlay_iup['nama_usaha'].dropna().unique())
+                st.success(f"Poligon berada di dalam WIUP: {iup_string} ✅✅")
+            else:
+                st.warning("Poligon di luar WIUP ⚠️⚠️")
+  
     st.subheader("Hasil Konversi")
     st.dataframe(df[['id', 'longitude', 'latitude']])
 
