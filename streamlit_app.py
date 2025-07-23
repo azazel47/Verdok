@@ -143,7 +143,7 @@ konservasi_gdf = get_kawasan_konservasi_from_arcgis()
 mil12_gdf = download_shapefile_from_gdrive("https://drive.google.com/file/d/16MnH27AofcSSr45jTvmopOZx4CMPxMKs/view?usp=sharing")
 sedimen_gdf = download_sedimentasi_shapefile() if cek_sedimentasi else None
 kkprl_gdf = load_kkprl_json()
-tambang_gdf = download_shapefile_from_gdrive("https://drive.google.com/file/d/1vysvEsJIiuTPGq1JgdqHMsBucLOGcFn8/view?usp=sharing") if cek_pertambangan else None
+tambang_gdf = download_shapefile_from_gdrive("https://drive.google.com/file/d/1hDyyW-1ueyj2qDvk3yjiTPEMNgjpTMiE/view?usp=sharing") if cek_pertambangan else None
 
 if uploaded_file and nama_file:
     df = pd.read_excel(uploaded_file)
