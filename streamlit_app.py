@@ -164,7 +164,7 @@ sedimen_gdf = download_sedimentasi_shapefile() if cek_sedimentasi else None
 kkprl_gdf = load_kkprl_json()
 tambang_gdf = download_shapefile_from_gdrive("https://drive.google.com/file/d/1hDyyW-1ueyj2qDvk3yjiTPEMNgjpTMiE/view?usp=sharing") if cek_pertambangan else None
 migas_gdf = download_shapefile_from_gdrive("https://drive.google.com/file/d/1GuPy3lOZQ2pmlnsgX5d8Xk9WbqzcmpBs/view?usp=sharing") if cek_migas else None
-rumpon_dbf = download_shapefile_from_gdrive("https://drive.google.com/file/d/1vUQArCq7A6iDEJ3AHyMAOtONAMYR2dI-/view?usp=sharing") if cek_rumpon else None
+rumpon_gdf = download_shapefile_from_gdrive("https://drive.google.com/file/d/1vUQArCq7A6iDEJ3AHyMAOtONAMYR2dI-/view?usp=sharing") if cek_rumpon else None
 
 if uploaded_file and nama_file:
     df = pd.read_excel(uploaded_file)
