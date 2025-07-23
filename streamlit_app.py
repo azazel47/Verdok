@@ -124,10 +124,21 @@ def download_sedimentasi_shapefile():
         st.warning(f"Gagal mengunduh dan membaca shapefile Sedimentasi: {e}")
         return None
 
+import streamlit as st
+
+# Konfigurasi halaman: judul dan ikon
+st.set_page_config(
+    page_title="Verdok - Konversi Koordinat",
+    page_icon="📝", 
+    layout="centered"
+)
+
+# Judul halaman di tengah
 st.markdown(
     "<h1 style='text-align: center;'>Konversi Koordinat dan Analisis Spasial - Verdok</h1>",
     unsafe_allow_html=True
 )
+
 
 update_time = get_last_modified("kkprl.json")
 st.markdown(f"🕒 **Data KKPRL terakhir diperbarui:** `{update_time}`")
