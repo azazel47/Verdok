@@ -14,8 +14,10 @@ import datetime
 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 import os
+st.write("Current working directory:", os.getcwd())
+st.write("Files in current dir:", os.listdir("."))
+st.write("Folder 'data/' exists?", os.path.exists("data"))
 
-st.write("Isi folder data/:", os.listdir("data"))
 
 def get_last_modified(filepath):
     try:
