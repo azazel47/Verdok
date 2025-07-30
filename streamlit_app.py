@@ -124,6 +124,14 @@ def download_sedimentasi_shapefile():
         st.warning(f"Gagal mengunduh dan membaca shapefile Sedimentasi: {e}")
         return None
 
+def load_local_shapefile(filepath_without_ext):
+    try:
+        gdf = gpd.read_file(f"{filepath_without_ext}.shp")
+        return gdf
+    except Exception as e:
+        st.warning(f"Gagal membaca shapefile lokal {filepath_without_ext}: {e}")
+        return None
+
 import streamlit as st
 
 # Konfigurasi halaman: judul dan ikon
@@ -162,8 +170,8 @@ konservasi_gdf = get_kawasan_konservasi_from_arcgis()
 mil12_gdf = download_shapefile_from_gdrive("https://drive.google.com/file/d/16MnH27AofcSSr45jTvmopOZx4CMPxMKs/view?usp=sharing")
 sedimen_gdf = download_sedimentasi_shapefile() if cek_sedimentasi else None
 kkprl_gdf = load_kkprl_json()
-tambang_gdf = download_shapefile_from_gdrive("https://drive.google.com/file/d/1hDyyW-1ueyj2qDvk3yjiTPEMNgjpTMiE/view?usp=sharing") if cek_pertambangan else None
-migas_gdf = download_shapefile_from_gdrive("https://drive.google.com/file/d/1GuPy3lOZQ2pmlnsgX5d8Xk9WbqzcmpBs/view?usp=sharing") if cek_migas else None
+tambang_gdf = load_local_shapefile("data/iup") if cek_pertambangan else None
+migas_gdf = load_local_shapefile("data/migas") if cek_migas else None
 rumpon_gdf = download_shapefile_from_gdrive("https://drive.google.com/file/d/1vUQArCq7A6iDEJ3AHyMAOtONAMYR2dI-/view?usp=sharing") if cek_rumpon else None
 
 if uploaded_file and nama_file:
