@@ -125,9 +125,10 @@ def download_sedimentasi_shapefile():
         return None
 
 def load_local_shapefile(shp_path):
-    return gpd.read_file(shp_path)
+    try:
+        return gpd.read_file(shp_path)
     except Exception as e:
-        st.warning(f"Gagal membaca shapefile lokal {filepath_without_ext}: {e}")
+        st.warning(f"Gagal membaca shapefile lokal {shp_path}: {e}")
         return None
 
 import streamlit as st
