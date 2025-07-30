@@ -126,7 +126,7 @@ def download_sedimentasi_shapefile():
 
 def load_local_shapefile(shp_path):
     return gpd.read_file(shp_path)
-    except Exception as else:
+    except Exception as e:
         st.warning(f"Gagal membaca shapefile lokal {filepath_without_ext}: {e}")
         return None
 
