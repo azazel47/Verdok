@@ -50,9 +50,10 @@ def get_kawasan_konservasi_from_arcgis():
 
 def load_kkprl_json():
     try:
-        with open("data/kkprl.json", "r", encoding="utf-8") as f:
+        with open("kkprl.json", "r", encoding="utf-8") as f:
             data = json.load(f)
 
+        # Konversi format ArcGIS (attributes + rings) menjadi GeoJSON (properties + coordinates)
         features = []
         for feat in data["features"]:
             if "geometry" in feat and "rings" in feat["geometry"]:
@@ -76,6 +77,7 @@ def load_kkprl_json():
     except Exception as e:
         st.warning(f"Gagal membaca file KKPRL JSON: {e}")
         return None
+
 
 def download_shapefile_from_gdrive(gdrive_url):
     try:
@@ -122,35 +124,30 @@ def download_sedimentasi_shapefile():
         st.warning(f"Gagal mengunduh dan membaca shapefile Sedimentasi: {e}")
         return None
 
-# ✅ Fungsi baru: membaca shapefile lokal
-def load_local_shapefile(filepath_without_ext):
-    try:
-        gdf = gpd.read_file(f"{filepath_without_ext}.shp")
-        return gdf
-    except Exception as e:
-        st.warning(f"Gagal membaca shapefile lokal {filepath_without_ext}: {e}")
-        return None
+import streamlit as st
 
-# Konfigurasi halaman
+# Konfigurasi halaman: judul dan ikon
 st.set_page_config(
     page_title="Verdok - Konversi Koordinat",
     page_icon="📝", 
     layout="centered"
 )
 
+# Judul halaman di tengah
 st.markdown(
     "<h1 style='text-align: center;'>Konversi Koordinat dan Analisis Spasial - Verdok (Ver 1.2)</h1>",
     unsafe_allow_html=True
 )
 
-update_time = get_last_modified("data/kkprl.json")
+
+update_time = get_last_modified("kkprl.json")
 st.markdown(f"🕒 **Data KKPRL terakhir diperbarui:** `{update_time}`")
 
 format_pilihan = st.radio("Pilih format data koordinat:", ("OSS-UTM", "General-Decimal Degree"))
+
 uploaded_file = st.file_uploader("Unggah file Excel", type=["xlsx"])
 shp_type = st.radio("Pilih tipe shapefile yang ingin dibuat:", ("Poligon (Polygon)", "Titik (Point)"))
 nama_file = st.text_input("➡️Masukkan nama file shapefile (tanpa ekstensi)⬅️", value="nama_shapefile")
-
 col1, col2, col3, col4 = st.columns(4)
 with col1:
     cek_sedimentasi = st.checkbox("Sedimentasi 🏖️")
@@ -160,18 +157,14 @@ with col3:
     cek_migas = st.checkbox("MIGAS🛢️")
 with col4:
     cek_rumpon = st.checkbox("Rumpon🪝")
-
-# Ambil data spasial
+    
 konservasi_gdf = get_kawasan_konservasi_from_arcgis()
 mil12_gdf = download_shapefile_from_gdrive("https://drive.google.com/file/d/16MnH27AofcSSr45jTvmopOZx4CMPxMKs/view?usp=sharing")
 sedimen_gdf = download_sedimentasi_shapefile() if cek_sedimentasi else None
 kkprl_gdf = load_kkprl_json()
-
-# ✅ Ganti hanya bagian ini:
-tambang_gdf = load_local_shapefile("data/iup") if cek_pertambangan else None
-migas_gdf = load_local_shapefile("data/migas") if cek_migas else None
+tambang_gdf = download_shapefile_from_gdrive("https://drive.google.com/file/d/1hDyyW-1ueyj2qDvk3yjiTPEMNgjpTMiE/view?usp=sharing") if cek_pertambangan else None
+migas_gdf = download_shapefile_from_gdrive("https://drive.google.com/file/d/1GuPy3lOZQ2pmlnsgX5d8Xk9WbqzcmpBs/view?usp=sharing") if cek_migas else None
 rumpon_gdf = download_shapefile_from_gdrive("https://drive.google.com/file/d/1vUQArCq7A6iDEJ3AHyMAOtONAMYR2dI-/view?usp=sharing") if cek_rumpon else None
-
 
 if uploaded_file and nama_file:
     df = pd.read_excel(uploaded_file)
