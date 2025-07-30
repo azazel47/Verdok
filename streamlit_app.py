@@ -170,8 +170,8 @@ konservasi_gdf = get_kawasan_konservasi_from_arcgis()
 mil12_gdf = download_shapefile_from_gdrive("https://drive.google.com/file/d/16MnH27AofcSSr45jTvmopOZx4CMPxMKs/view?usp=sharing")
 sedimen_gdf = download_sedimentasi_shapefile() if cek_sedimentasi else None
 kkprl_gdf = load_kkprl_json()
-tambang_gdf = load_local_shapefile("data/iup") if cek_pertambangan else None
-migas_gdf = load_local_shapefile("data/migas") if cek_migas else None
+tambang_gdf = load_local_shapefile("data/IUP_FULL_INDO") if cek_pertambangan else None
+migas_gdf = load_local_shapefile("data/MIGAS_FULL_INDO") if cek_migas else None
 rumpon_gdf = download_shapefile_from_gdrive("https://drive.google.com/file/d/1vUQArCq7A6iDEJ3AHyMAOtONAMYR2dI-/view?usp=sharing") if cek_rumpon else None
 
 if uploaded_file and nama_file:
