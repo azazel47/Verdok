@@ -8,11 +8,8 @@ import zipfile
 import requests
 import gdown
 from io import BytesIO
-import urllib3
 import json
 import datetime
-
-urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 def get_last_modified(filepath):
     try:
@@ -28,26 +25,15 @@ def dms_to_dd(degree, minute, second, direction):
         dd *= -1
     return dd
 
-@st.cache_data
-def get_kawasan_konservasi_from_arcgis():
-    url = "https://kspservices.big.go.id/satupeta/rest/services/PUBLIK/SUMBER_DAYA_ALAM_DAN_LINGKUNGAN/MapServer/35/query"
-    params = {
-        "where": "1=1",
-        "outFields": "*",
-        "f": "geojson"
-    }
+def load_shapefile_local(path):
     try:
-        response = requests.get(url, params=params, verify=False)
-        if response.status_code == 200:
-            gdf = gpd.read_file(BytesIO(response.content))
-            return gdf
-        else:
-            st.warning(f"Gagal mengunduh data: status code {response.status_code}")
-            return None
+        gdf = gpd.read_file(path)
+        return gdf
     except Exception as e:
-        st.warning(f"Gagal mengambil data dari ArcGIS Server: {e}")
+        st.warning(f"Gagal memuat shapefile lokal dari {path}: {e}")
         return None
 
+@st.cache_data
 def load_kkprl_json():
     try:
         with open("kkprl.json", "r", encoding="utf-8") as f:
@@ -158,12 +144,12 @@ with col3:
 with col4:
     cek_rumpon = st.checkbox("Rumpon🪝")
     
-konservasi_gdf = get_kawasan_konservasi_from_arcgis()
-mil12_gdf = download_shapefile_from_gdrive("https://drive.google.com/file/d/16MnH27AofcSSr45jTvmopOZx4CMPxMKs/view?usp=sharing")
+konservasi_gdf = load_shapefile_local("data/Kawasan Konservasi 2022 update.shp")
+mil12_gdf = load_shapefile_local("data/12_Mil.shp")
 sedimen_gdf = download_sedimentasi_shapefile() if cek_sedimentasi else None
 kkprl_gdf = load_kkprl_json()
-tambang_gdf = download_shapefile_from_gdrive("https://drive.google.com/file/d/1hDyyW-1ueyj2qDvk3yjiTPEMNgjpTMiE/view?usp=sharing") if cek_pertambangan else None
-migas_gdf = download_shapefile_from_gdrive("https://drive.google.com/file/d/1GuPy3lOZQ2pmlnsgX5d8Xk9WbqzcmpBs/view?usp=sharing") if cek_migas else None
+tambang_gdf = load_shapefile_local("data/IUP_FULL_INDO.shp") if cek_pertambangan else None
+migas_gdf = load_shapefile_local("data/MIGAS_FULL_INDO.shp") if cek_migas else None
 rumpon_gdf = download_shapefile_from_gdrive("https://drive.google.com/file/d/1vUQArCq7A6iDEJ3AHyMAOtONAMYR2dI-/view?usp=sharing") if cek_rumpon else None
 
 if uploaded_file and nama_file:
