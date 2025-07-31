@@ -17,6 +17,7 @@ import os
 st.write("Current working directory:", os.getcwd())
 st.write("Files in current dir:", os.listdir("."))
 st.write("Folder 'data/' exists?", os.path.exists("data"))
+st.write("Validitas geometri MIGAS:", migas_gdf.is_valid.all())
 
 
 def get_last_modified(filepath):
