@@ -4,9 +4,7 @@ import geopandas as gpd
 from shapely.geometry import Point, Polygon
 import tempfile
 import os
-import zipfile
 import requests
-import gdown
 from io import BytesIO
 import json
 import datetime
@@ -64,52 +62,6 @@ def load_kkprl_json():
         st.warning(f"Gagal membaca file KKPRL JSON: {e}")
         return None
 
-
-def download_shapefile_from_gdrive(gdrive_url):
-    try:
-        file_id = gdrive_url.split("/d/")[1].split("/")[0]
-        download_url = f"https://drive.google.com/uc?id={file_id}"
-
-        with tempfile.TemporaryDirectory() as tmpdirname:
-            zip_path = os.path.join(tmpdirname, "12mil.zip")
-            gdown.download(download_url, zip_path, quiet=False)
-
-            with zipfile.ZipFile(zip_path, 'r') as zip_ref:
-                zip_ref.extractall(tmpdirname)
-
-            for file in os.listdir(tmpdirname):
-                if file.endswith(".shp"):
-                    shp_path = os.path.join(tmpdirname, file)
-                    gdf = gpd.read_file(shp_path)
-                    return gdf
-        return None
-    except Exception as e:
-        st.warning(f"Gagal mengunduh dan membaca shapefile dari Google Drive: {e}")
-        return None
-
-def download_sedimentasi_shapefile():
-    try:
-        sedimentasi_url = "https://drive.google.com/file/d/1ZcruoWPzneMCn11Y7vmgCvIWFyO4Sgg6/view?usp=drive_link"
-        file_id = sedimentasi_url.split("/d/")[1].split("/")[0]
-        download_url = f"https://drive.google.com/uc?id={file_id}"
-
-        with tempfile.TemporaryDirectory() as tmpdirname:
-            zip_path = os.path.join(tmpdirname, "sedimen.zip")
-            gdown.download(download_url, zip_path, quiet=False)
-
-            with zipfile.ZipFile(zip_path, 'r') as zip_ref:
-                zip_ref.extractall(tmpdirname)
-
-            for file in os.listdir(tmpdirname):
-                if file.endswith(".shp"):
-                    shp_path = os.path.join(tmpdirname, file)
-                    gdf = gpd.read_file(shp_path)
-                    return gdf
-        return None
-    except Exception as e:
-        st.warning(f"Gagal mengunduh dan membaca shapefile Sedimentasi: {e}")
-        return None
-
 import streamlit as st
 
 # Konfigurasi halaman: judul dan ikon
@@ -146,11 +98,11 @@ with col4:
     
 konservasi_gdf = load_shapefile_local("data/Kawasan Konservasi 2022 update.shp")
 mil12_gdf = load_shapefile_local("data/12_Mil.shp")
-sedimen_gdf = download_sedimentasi_shapefile() if cek_sedimentasi else None
+sedimen_gdf = load_shapefile_local("data/LokasiPrioritasPengumuman_15maret2024_AR.shp") if cek_sedimentasi else None
 kkprl_gdf = load_kkprl_json()
-tambang_gdf = load_shapefile_local("data/IUP_FULL_INDO.shp") if cek_pertambangan else None
-migas_gdf = load_shapefile_local("data/MIGAS_FULL_INDO.shp") if cek_migas else None
-rumpon_gdf = download_shapefile_from_gdrive("https://drive.google.com/file/d/1vUQArCq7A6iDEJ3AHyMAOtONAMYR2dI-/view?usp=sharing") if cek_rumpon else None
+tambang_gdf = load_shapefile_local("data/IUP.shp") if cek_pertambangan else None
+migas_gdf = load_shapefile_local("data/MIGAS.shp") if cek_migas else None
+rumpon_gdf = load_shapefile_local("data/Rumpon_Full.shp") if cek_migas else None
 
 if uploaded_file and nama_file:
     df = pd.read_excel(uploaded_file)
