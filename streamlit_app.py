@@ -170,9 +170,9 @@ if uploaded_file and nama_file:
             joined_migas = gpd.sjoin(gdf, migas_gdf[['oprblk','geometry']], how='left', predicate='within')
             points_in_migas = joined_migas[~joined_migas['oprblk'].isna()]
             if not points_in_migas.empty:
-                wk_string = ", ".join(points_in_migas['oprblk '].dropna().unique())
+                oprblk_string = ", ".join(points_in_migas['oprblk'].dropna().unique())
                 st.success(f"{len(points_in_migas)} Titik berada di dalam WK ✅✅")
-                st.write(f"Berada di WK milik: {wk_string}")
+                st.write(f"Berada di WK milik: {oprblk_string}")
             else:
                 st.warning("Titik di luar area WK ⚠️⚠️")   
                 
@@ -234,8 +234,8 @@ if uploaded_file and nama_file:
         if migas_gdf is not None:
             overlay_migas = gpd.overlay(gdf, migas_gdf[['oprblk', 'geometry']], how='intersection')
             if not overlay_migas.empty:
-                wk_string = ", ".join(overlay_migas['oprblk'].dropna().unique())
-                st.success(f"Poligon berada di dalam WK: {wk_string} ✅✅")
+                oprblk_string = ", ".join(overlay_migas['oprblk'].dropna().unique())
+                st.success(f"Poligon berada di dalam WK: {oprblk_string} ✅✅")
             else:
                 st.warning("Poligon di luar WK ⚠️⚠️")
                 
