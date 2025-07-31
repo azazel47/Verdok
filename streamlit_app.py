@@ -103,6 +103,7 @@ kkprl_gdf = load_kkprl_json()
 tambang_gdf = load_shapefile_local("data/IUP.shp") if cek_pertambangan else None
 migas_gdf = load_shapefile_local("data/MIGAS.shp") if cek_migas else None
 rumpon_gdf = load_shapefile_local("data/Rumpon_Full.shp") if cek_migas else None
+st.write(migas_gdf.columns)
 
 if uploaded_file and nama_file:
     df = pd.read_excel(uploaded_file)
