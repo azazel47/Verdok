@@ -17,7 +17,7 @@ import os
 st.write("Current working directory:", os.getcwd())
 st.write("Files in current dir:", os.listdir("."))
 st.write("Folder 'data/' exists?", os.path.exists("data"))
-st.write("Validitas geometri MIGAS:", migas_gdf.is_valid.all())
+
 
 
 def get_last_modified(filepath):
@@ -178,6 +178,8 @@ kkprl_gdf = load_kkprl_json()
 tambang_gdf = load_local_shapefile("data/IUP_FULL_INDO.shp") if cek_pertambangan else None
 migas_gdf = load_local_shapefile("data/MIGAS_FULL_INDO.shp") if cek_migas else None
 rumpon_gdf = download_shapefile_from_gdrive("https://drive.google.com/file/d/1vUQArCq7A6iDEJ3AHyMAOtONAMYR2dI-/view?usp=sharing") if cek_rumpon else None
+
+st.write("Validitas geometri MIGAS:", migas_gdf.is_valid.all())
 
 if uploaded_file and nama_file:
     df = pd.read_excel(uploaded_file)
