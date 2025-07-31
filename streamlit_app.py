@@ -167,6 +167,7 @@ if uploaded_file and nama_file:
                 st.warning("Titik di luar area WIUP ⚠️⚠️")    
                 
         if migas_gdf is not None:
+            st.write(f"Jumlah fitur MIGAS: {len(migas_gdf)}")  # debug
             joined_migas = gpd.sjoin(gdf, migas_gdf[['oprblk','geometry']], how='left', predicate='within')
             points_in_migas = joined_migas[~joined_migas['oprblk'].isna()]
             if not points_in_migas.empty:
