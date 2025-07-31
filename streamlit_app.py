@@ -8,6 +8,8 @@ import requests
 from io import BytesIO
 import json
 import datetime
+import fiona
+from shapely.geometry import shape
 
 def get_last_modified(filepath):
     try:
@@ -25,11 +27,21 @@ def dms_to_dd(degree, minute, second, direction):
 
 def load_shapefile_local(path):
     try:
-        gdf = gpd.read_file(path)
+        features = []
+        with fiona.open(path, encoding='utf-8') as src:
+            for feat in src:
+                props = feat['properties']
+                geom = shape(feat['geometry'])
+                props['geometry'] = geom
+                features.append(props)
+        
+        gdf = gpd.GeoDataFrame(features)
+        gdf.set_crs(src.crs['init'] if 'init' in src.crs else "EPSG:4326", inplace=True)
         return gdf
     except Exception as e:
-        st.warning(f"Gagal memuat shapefile lokal dari {path}: {e}")
+        st.warning(f"Gagal memuat shapefile dari {path}: {e}")
         return None
+
 
 @st.cache_data
 def load_kkprl_json():
