@@ -121,10 +121,10 @@ if uploaded_file and nama_file:
         gdf = gpd.GeoDataFrame(df[['id']], geometry=geometry, crs="EPSG:4326")
 
         if konservasi_gdf is not None:
-            joined = gpd.sjoin(gdf, konservasi_gdf[['namobj', 'geometry']], how='left', predicate='within')
-            points_in_konservasi = joined[~joined['namobj'].isna()]
+            joined = gpd.sjoin(gdf, konservasi_gdf[['NAMA_KK', 'geometry']], how='left', predicate='within')
+            points_in_konservasi = joined[~joined['NAMA_KK'].isna()]
             if not points_in_konservasi.empty:
-                namobj_string = ", ".join(points_in_konservasi['namobj'].dropna().unique())
+                namobj_string = ", ".join(points_in_konservasi['NAMA_KK'].dropna().unique())
                 st.warning(f"{len(points_in_konservasi)} titik berada di dalam Kawasan Konservasi {namobj_string} ⚠️⚠️")
             else:
                 st.success("Tidak ada titik yang berada di kawasan konservasi ✅✅")
@@ -193,9 +193,9 @@ if uploaded_file and nama_file:
         gdf = gpd.GeoDataFrame(pd.DataFrame({"id": ["polygon_1"]}), geometry=geometry, crs="EPSG:4326")
 
         if konservasi_gdf is not None:
-            overlay_result = gpd.overlay(gdf, konservasi_gdf[['namobj', 'geometry']], how='intersection')
+            overlay_result = gpd.overlay(gdf, konservasi_gdf[['NAMA_KK', 'geometry']], how='intersection')
             if not overlay_result.empty:
-                namobj_string = ", ".join(overlay_result['namobj'].dropna().unique())
+                namobj_string = ", ".join(overlay_result['NAMA_KK'].dropna().unique())
                 st.warning(f"Poligon berada di dalam Kawasan Konservasi {namobj_string} ⚠️⚠️")
             else:
                 st.success("Poligon tidak berada di kawasan konservasi ✅✅")
