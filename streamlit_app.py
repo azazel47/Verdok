@@ -13,12 +13,6 @@ import json
 import datetime
 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
-import os
-st.write("Current working directory:", os.getcwd())
-st.write("Files in current dir:", os.listdir("."))
-st.write("Folder 'data/' exists?", os.path.exists("data"))
-
-
 
 def get_last_modified(filepath):
     try:
@@ -130,13 +124,6 @@ def download_sedimentasi_shapefile():
         st.warning(f"Gagal mengunduh dan membaca shapefile Sedimentasi: {e}")
         return None
 
-def load_local_shapefile(shp_path):
-    try:
-        return gpd.read_file(shp_path)
-    except Exception as e:
-        st.warning(f"Gagal membaca shapefile lokal {shp_path}: {e}")
-        return None
-
 import streamlit as st
 
 # Konfigurasi halaman: judul dan ikon
@@ -175,13 +162,9 @@ konservasi_gdf = get_kawasan_konservasi_from_arcgis()
 mil12_gdf = download_shapefile_from_gdrive("https://drive.google.com/file/d/16MnH27AofcSSr45jTvmopOZx4CMPxMKs/view?usp=sharing")
 sedimen_gdf = download_sedimentasi_shapefile() if cek_sedimentasi else None
 kkprl_gdf = load_kkprl_json()
-tambang_gdf = load_local_shapefile("data/IUP_FULL_INDO.shp") if cek_pertambangan else None
-migas_gdf = load_local_shapefile("data/MIGAS_FULL_INDO.shp") if cek_migas else None
+tambang_gdf = download_shapefile_from_gdrive("https://drive.google.com/file/d/1hDyyW-1ueyj2qDvk3yjiTPEMNgjpTMiE/view?usp=sharing") if cek_pertambangan else None
+migas_gdf = download_shapefile_from_gdrive("https://drive.google.com/file/d/1GuPy3lOZQ2pmlnsgX5d8Xk9WbqzcmpBs/view?usp=sharing") if cek_migas else None
 rumpon_gdf = download_shapefile_from_gdrive("https://drive.google.com/file/d/1vUQArCq7A6iDEJ3AHyMAOtONAMYR2dI-/view?usp=sharing") if cek_rumpon else None
-
-st.write("Validitas geometri MIGAS:", migas_gdf.is_valid.all())
-st.write("CRS titik:", gdf.crs)
-st.write("CRS MIGAS:", migas_gdf.crs)
 
 if uploaded_file and nama_file:
     df = pd.read_excel(uploaded_file)
@@ -246,10 +229,10 @@ if uploaded_file and nama_file:
                 st.warning("Titik di luar area WIUP ⚠️⚠️")    
                 
         if migas_gdf is not None:
-            joined_migas = gpd.sjoin(gdf, migas_gdf[['namobj','geometry']], how='left', predicate='within')
-            points_in_migas = joined_migas[~joined_migas['namobj'].isna()]
+            joined_migas = gpd.sjoin(gdf, migas_gdf[['oprblk','geometry']], how='left', predicate='within')
+            points_in_migas = joined_migas[~joined_migas['oprblk'].isna()]
             if not points_in_migas.empty:
-                wk_string = ", ".join(points_in_migas['namobj'].dropna().unique())
+                wk_string = ", ".join(points_in_migas['oprblk '].dropna().unique())
                 st.success(f"{len(points_in_migas)} Titik berada di dalam WK ✅✅")
                 st.write(f"Berada di WK milik: {wk_string}")
             else:
@@ -257,7 +240,7 @@ if uploaded_file and nama_file:
                 
         if rumpon_gdf is not None:
             joined_rumpon = gpd.sjoin(gdf, rumpon_gdf[['ID_Rumpon','geometry']], how='left', predicate='within')
-            points_in_rumpon = joined_rumpon[~joined_rumpon['namobj'].isna()]
+            points_in_rumpon = joined_rumpon[~joined_rumpon['oprblk'].isna()]
             if not points_in_rumpon.empty:
                 rumpon_string = ", ".join(points_in_rumpon['ID_Rumpon'].dropna().unique())
                 st.success(f"{len(points_in_rumpon)} Titik berada di dalam grid Rumpon ✅✅")
@@ -311,9 +294,9 @@ if uploaded_file and nama_file:
                 st.warning("Poligon di luar WIUP ⚠️⚠️")
                 
         if migas_gdf is not None:
-            overlay_migas = gpd.overlay(gdf, migas_gdf[['namobj', 'geometry']], how='intersection')
+            overlay_migas = gpd.overlay(gdf, migas_gdf[['oprblk', 'geometry']], how='intersection')
             if not overlay_migas.empty:
-                wk_string = ", ".join(overlay_migas['namobj'].dropna().unique())
+                wk_string = ", ".join(overlay_migas['oprblk'].dropna().unique())
                 st.success(f"Poligon berada di dalam WK: {wk_string} ✅✅")
             else:
                 st.warning("Poligon di luar WK ⚠️⚠️")
