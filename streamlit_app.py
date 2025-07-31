@@ -137,8 +137,8 @@ if uploaded_file and nama_file:
             joined = gpd.sjoin(gdf, konservasi_gdf[['NAMA_KK', 'geometry']], how='left', predicate='within')
             points_in_konservasi = joined[~joined['NAMA_KK'].isna()]
             if not points_in_konservasi.empty:
-                namobj_string = ", ".join(points_in_konservasi['NAMA_KK'].dropna().unique())
-                st.warning(f"{len(points_in_konservasi)} titik berada di dalam Kawasan Konservasi {namobj_string} ⚠️⚠️")
+                NAMA_KK_string = ", ".join(points_in_konservasi['NAMA_KK'].dropna().unique())
+                st.warning(f"{len(points_in_konservasi)} titik berada di dalam Kawasan Konservasi {NAMA_KK_string} ⚠️⚠️")
             else:
                 st.success("Tidak ada titik yang berada di kawasan konservasi ✅✅")
 
