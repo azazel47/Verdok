@@ -180,6 +180,8 @@ migas_gdf = load_local_shapefile("data/MIGAS_FULL_INDO.shp") if cek_migas else N
 rumpon_gdf = download_shapefile_from_gdrive("https://drive.google.com/file/d/1vUQArCq7A6iDEJ3AHyMAOtONAMYR2dI-/view?usp=sharing") if cek_rumpon else None
 
 st.write("Validitas geometri MIGAS:", migas_gdf.is_valid.all())
+st.write("CRS titik:", gdf.crs)
+st.write("CRS MIGAS:", migas_gdf.crs)
 
 if uploaded_file and nama_file:
     df = pd.read_excel(uploaded_file)
