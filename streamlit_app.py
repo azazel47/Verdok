@@ -193,10 +193,10 @@ if uploaded_file and nama_file:
         gdf = gpd.GeoDataFrame(pd.DataFrame({"id": ["polygon_1"]}), geometry=geometry, crs="EPSG:4326")
 
         if konservasi_gdf is not None:
-            overlay_result = gpd.overlay(gdf, konservasi_gdf[['NAMA_KK', 'geometry']], how='intersection')
-            if not overlay_result.empty:
-                namobj_string = ", ".join(overlay_result['NAMA_KK'].dropna().unique())
-                st.warning(f"Poligon berada di dalam Kawasan Konservasi {namobj_string} ⚠️⚠️")
+            overlay_konservasi = gpd.overlay(gdf, konservasi_gdf[['NAMA_KK', 'geometry']], how='intersection')
+            if not overlay_konservasi.empty:
+                NAMA_KK_string = ", ".join(overlay_result['NAMA_KK'].dropna().unique())
+                st.warning(f"Poligon berada di dalam Kawasan Konservasi {NAMA_KK_string} ⚠️⚠️")
             else:
                 st.success("Poligon tidak berada di kawasan konservasi ✅✅")
 
