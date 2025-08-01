@@ -8,6 +8,7 @@ import requests
 from io import BytesIO
 import json
 import datetime
+import zipfile
 
 def get_last_modified(filepath):
     try:
