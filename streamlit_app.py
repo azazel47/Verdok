@@ -8,8 +8,6 @@ import requests
 from io import BytesIO
 import json
 import datetime
-import fiona
-from shapely.geometry import shape
 
 def get_last_modified(filepath):
     try:
@@ -27,21 +25,11 @@ def dms_to_dd(degree, minute, second, direction):
 
 def load_shapefile_local(path):
     try:
-        features = []
-        with fiona.open(path, encoding='utf-8') as src:
-            for feat in src:
-                props = feat['properties']
-                geom = shape(feat['geometry'])
-                props['geometry'] = geom
-                features.append(props)
-        
-        gdf = gpd.GeoDataFrame(features)
-        gdf.set_crs(src.crs['init'] if 'init' in src.crs else "EPSG:4326", inplace=True)
+        gdf = gpd.read_file(path)
         return gdf
     except Exception as e:
-        st.warning(f"Gagal memuat shapefile dari {path}: {e}")
+        st.warning(f"Gagal memuat shapefile lokal dari {path}: {e}")
         return None
-
 
 @st.cache_data
 def load_kkprl_json():
@@ -91,7 +79,7 @@ st.markdown(
 
 
 update_time = get_last_modified("kkprl.json")
-st.markdown(f"🕒 **Data KKPRL terakhir diperbarui:** `{update_time}`")
+st.markdown(f"🕒 **Data KKPRL terakhir diperbarui:** {update_time}")
 
 format_pilihan = st.radio("Pilih format data koordinat:", ("OSS-UTM", "General-Decimal Degree"))
 
@@ -137,8 +125,8 @@ if uploaded_file and nama_file:
             joined = gpd.sjoin(gdf, konservasi_gdf[['NAMA_KK', 'geometry']], how='left', predicate='within')
             points_in_konservasi = joined[~joined['NAMA_KK'].isna()]
             if not points_in_konservasi.empty:
-                NAMA_KK_string = ", ".join(points_in_konservasi['NAMA_KK'].dropna().unique())
-                st.warning(f"{len(points_in_konservasi)} titik berada di dalam Kawasan Konservasi {NAMA_KK_string} ⚠️⚠️")
+                namobj_string = ", ".join(points_in_konservasi['NAMA_KK'].dropna().unique())
+                st.warning(f"{len(points_in_konservasi)} titik berada di dalam Kawasan Konservasi {namobj_string} ⚠️⚠️")
             else:
                 st.success("Tidak ada titik yang berada di kawasan konservasi ✅✅")
 
