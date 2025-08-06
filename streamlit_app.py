@@ -108,9 +108,9 @@ rumpon_gdf = load_shapefile_local("data/Rumpon_Full.shp") if cek_migas else None
 
 if uploaded_file and nama_file:
     df = pd.read_excel(uploaded_file)
-    if df.shape[0] > 200:
-        st.warning("Koordinat Lebih dari 200.")
-        df = df.head(50)
+    if df.shape[0] > 300:
+        st.warning("Koordinat Lebih dari 300.")
+        df = df.head(300)
 
     if format_pilihan == "OSS-UTM":
         df['longitude'] = df.apply(lambda row: dms_to_dd(row['bujur_derajat'], row['bujur_menit'], row['bujur_detik'], row['BT_BB']), axis=1)
@@ -264,3 +264,4 @@ if uploaded_file and nama_file:
                     zipf.write(fpath, arcname=os.path.basename(fpath))
         with open(zip_path, "rb") as f:
             st.download_button("Unduh Shapefile (ZIP)", f, file_name=f"{nama_file}.zip")
+
