@@ -103,7 +103,7 @@ sedimen_gdf = load_shapefile_local("data/LokasiPrioritasPengumuman_15maret2024_A
 kkprl_gdf = load_kkprl_json()
 tambang_gdf = load_shapefile_local("data/IUP.shp") if cek_pertambangan else None
 migas_gdf = load_shapefile_local("data/MIGAS.shp") if cek_migas else None
-rumpon_gdf = load_shapefile_local("data/Rumpon_Full.shp") if cek_migas else None
+rumpon_gdf = load_shapefile_local("data/Rumpon_Full.shp") if cek_rumpon else None
 
 
 if uploaded_file and nama_file:
@@ -262,6 +262,7 @@ if uploaded_file and nama_file:
                     zipf.write(fpath, arcname=os.path.basename(fpath))
         with open(zip_path, "rb") as f:
             st.download_button("Unduh Shapefile (ZIP)", f, file_name=f"{nama_file}.zip")
+
 
 
 
