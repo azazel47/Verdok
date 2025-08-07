@@ -198,10 +198,8 @@ if uploaded_file and nama_file:
         if konservasi_gdf is not None:
             overlay_konservasi = gpd.overlay(gdf, konservasi_gdf[['NAMA_KK', 'geometry']], how='intersection')
             if not overlay_konservasi.empty:
-                NAMA_KK_string = ", ".join(overlay_result['NAMA_KK'].dropna().unique())
+                NAMA_KK_string = ", ".join(overlay_konservasi['NAMA_KK'].dropna().unique())
                 st.warning(f"Poligon berada di dalam Kawasan Konservasi {NAMA_KK_string} ⚠️⚠️")
-            else:
-                st.success("Poligon tidak berada di kawasan konservasi ✅✅")
 
         if mil12_gdf is not None:
             overlay_mil = gpd.overlay(gdf, mil12_gdf[['WP', 'geometry']], how='intersection')
