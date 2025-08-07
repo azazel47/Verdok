@@ -181,7 +181,7 @@ if uploaded_file and nama_file:
                 
         if rumpon_gdf is not None:
             joined_rumpon = gpd.sjoin(gdf, rumpon_gdf[['ID_Rumpon','geometry']], how='left', predicate='within')
-            points_in_rumpon = joined_rumpon[~joined_rumpon['oprblk'].isna()]
+            points_in_rumpon = joined_rumpon[~joined_rumpon['ID_Rumpon'].isna()]
             if not points_in_rumpon.empty:
                 rumpon_string = ", ".join(points_in_rumpon['ID_Rumpon'].dropna().unique())
                 st.success(f"{len(points_in_rumpon)} Titik berada di dalam grid Rumpon ✅✅")
@@ -262,5 +262,6 @@ if uploaded_file and nama_file:
                     zipf.write(fpath, arcname=os.path.basename(fpath))
         with open(zip_path, "rb") as f:
             st.download_button("Unduh Shapefile (ZIP)", f, file_name=f"{nama_file}.zip")
+
 
 
