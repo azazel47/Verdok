@@ -175,9 +175,9 @@ if uploaded_file and nama_file:
             if not points_in_migas.empty:
                 oprblk_string = ", ".join(points_in_migas['oprblk'].dropna().unique())
                 st.success(f"{len(points_in_migas)} Titik berada di dalam WK ✅✅")
-                st.write(f"Berada di WK milik: {oprblk_string}")
+                st.write(f"Berada di WK migas milik: {oprblk_string}")
             else:
-                st.warning("Titik di luar area WK ⚠️⚠️")   
+                st.warning("Titik di luar area WK migas ⚠️⚠️")   
                 
         if rumpon_gdf is not None:
             joined_rumpon = gpd.sjoin(gdf, rumpon_gdf[['ID_Rumpon','geometry']], how='left', predicate='within')
@@ -215,7 +215,7 @@ if uploaded_file and nama_file:
                 st.warning(f"Poligon Overlap dengan KKPRL Terbit ⚠️⚠️")
                 st.write(overlay_kkprl[['NO_KKPRL', 'NAMA_SUBJ']])
             else:
-                st.success("Poligon tidak Overlap")
+                st.success("Poligon tidak Overlap dengan KKPRL terbit")
 
         if sedimen_gdf is not None:
             overlay_sedimen = gpd.overlay(gdf, sedimen_gdf[['geometry']], how='intersection')
@@ -236,9 +236,9 @@ if uploaded_file and nama_file:
             overlay_migas = gpd.overlay(gdf, migas_gdf[['oprblk', 'geometry']], how='intersection')
             if not overlay_migas.empty:
                 oprblk_string = ", ".join(overlay_migas['oprblk'].dropna().unique())
-                st.success(f"Poligon berada di dalam WK: {oprblk_string} ✅✅")
+                st.success(f"Poligon berada di dalam WK Migas milik: {oprblk_string} ✅✅")
             else:
-                st.warning("Poligon di luar WK ⚠️⚠️")
+                st.warning("Poligon di luar WK Migas ⚠️⚠️")
                 
         if rumpon_gdf is not None:
             overlay_rumpon = gpd.overlay(gdf, rumpon_gdf[['ID_Rumpon', 'geometry']], how='intersection')
@@ -262,4 +262,5 @@ if uploaded_file and nama_file:
                     zipf.write(fpath, arcname=os.path.basename(fpath))
         with open(zip_path, "rb") as f:
             st.download_button("Unduh Shapefile (ZIP)", f, file_name=f"{nama_file}.zip")
+
 
