@@ -76,7 +76,7 @@ st.set_page_config(
 
 # Judul halaman di tengah
 st.markdown(
-    "<h1 style='text-align: center;'>Konversi Koordinat dan Analisis Spasial - Verdok (Ver 1.2)</h1>",
+    "<h1 style='text-align: center;'>Konversi Koordinat dan Analisis Spasial - Verdok (Ver 1.3)</h1>",
     unsafe_allow_html=True
 )
 
@@ -271,7 +271,7 @@ if uploaded_file and nama_file:
 
     if not gdf.empty:
         centroid = gdf.unary_union.centroid
-        m = folium.Map(location=[centroid.y, centroid.x], zoom_start=8, tiles="OpenStreetMap")
+        m = folium.Map(location=[centroid.y, centroid.x], zoom_start=15, tiles="OpenStreetMap")
 
         # Basemap Google Satellite
         folium.TileLayer(
@@ -309,6 +309,7 @@ if uploaded_file and nama_file:
         folium.LayerControl().add_to(m)
 
         st_map = st_folium(m, width=800, height=500)
+
 
 
 
