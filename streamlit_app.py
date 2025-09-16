@@ -263,6 +263,51 @@ if uploaded_file and nama_file:
         with open(zip_path, "rb") as f:
             st.download_button("Unduh Shapefile (ZIP)", f, file_name=f"{nama_file}.zip")
 
+    # -------------------------
+    # Visualisasi Peta Folium
+    # -------------------------
+    st.subheader("Visualisasi Peta")
+
+    if not gdf.empty:
+        centroid = gdf.unary_union.centroid
+        m = folium.Map(location=[centroid.y, centroid.x], zoom_start=8, tiles="OpenStreetMap")
+
+        # Basemap Google Satellite
+        folium.TileLayer(
+            tiles="https://mt1.google.com/vt/lyrs=s&x={x}&y={y}&z={z}",
+            attr="Google Satellite",
+            name="Google Satellite",
+            overlay=False,
+            control=True
+        ).add_to(m)
+
+        # Basemap Google Hybrid
+        folium.TileLayer(
+            tiles="https://mt1.google.com/vt/lyrs=y&x={x}&y={y}&z={z}",
+            attr="Google Hybrid",
+            name="Google Hybrid",
+            overlay=False,
+            control=True
+        ).add_to(m)
+
+        # Ambil hanya kolom non-geometry untuk tooltip
+        valid_cols = [c for c in gdf.columns if c != "geometry"]
+
+        if valid_cols:
+            folium.GeoJson(
+                gdf,
+                name="Hasil Analisis",
+                tooltip=folium.GeoJsonTooltip(fields=valid_cols, aliases=valid_cols)
+            ).add_to(m)
+        else:
+            folium.GeoJson(
+                gdf,
+                name="Hasil Analisis"
+            ).add_to(m)
+
+        folium.LayerControl().add_to(m)
+
+        st_map = st_folium(m, width=800, height=500)
 
 
 
