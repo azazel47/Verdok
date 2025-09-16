@@ -9,3 +9,5 @@ fiona
 pyproj
 rtree
 gdown
+streamlit-folium
+folium
