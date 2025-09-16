@@ -268,13 +268,13 @@ if uploaded_file and nama_file:
     # -------------------------
     st.subheader("Visualisasi Peta")
 
-if not gdf.empty:
-    centroid = gdf.unary_union.centroid
+    if not gdf.empty:
+        centroid = gdf.unary_union.centroid
     if not isinstance(centroid, Point):
         lon = gdf.geometry.centroid.x.mean()
         lat = gdf.geometry.centroid.y.mean()
-    else:
-        lon, lat = centroid.x, centroid.y
+        else:
+            lon, lat = centroid.x, centroid.y
 
     m = folium.Map(location=[lat, lon], zoom_start=8, tiles="OpenStreetMap")
 
@@ -314,6 +314,7 @@ if not gdf.empty:
         folium.LayerControl().add_to(m)
 
         st_map = st_folium(m, width=800, height=500)
+
 
 
 
