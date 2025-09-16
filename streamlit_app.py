@@ -4,11 +4,11 @@ import geopandas as gpd
 from shapely.geometry import Point, Polygon
 import tempfile
 import os
-import requests
-from io import BytesIO
 import json
 import datetime
 import zipfile
+import folium
+from streamlit_folium import st_folium
 
 def get_last_modified(filepath):
     try:
@@ -38,7 +38,6 @@ def load_kkprl_json():
         with open("kkprl.json", "r", encoding="utf-8") as f:
             data = json.load(f)
 
-        # Konversi format ArcGIS (attributes + rings) menjadi GeoJSON (properties + coordinates)
         features = []
         for feat in data["features"]:
             if "geometry" in feat and "rings" in feat["geometry"]:
@@ -63,30 +62,27 @@ def load_kkprl_json():
         st.warning(f"Gagal membaca file KKPRL JSON: {e}")
         return None
 
-import streamlit as st
 
-# Konfigurasi halaman: judul dan ikon
+# Konfigurasi halaman
 st.set_page_config(
     page_title="Verdok - Konversi Koordinat",
     page_icon="📝", 
     layout="centered"
 )
 
-# Judul halaman di tengah
 st.markdown(
     "<h1 style='text-align: center;'>Konversi Koordinat dan Analisis Spasial - Verdok (Ver 1.2)</h1>",
     unsafe_allow_html=True
 )
 
-
 update_time = get_last_modified("kkprl.json")
 st.markdown(f"🕒 **Data KKPRL terakhir diperbarui:** {update_time}")
 
 format_pilihan = st.radio("Pilih format data koordinat:", ("OSS-UTM", "General-Decimal Degree"))
-
 uploaded_file = st.file_uploader("Unggah file Excel", type=["xlsx"])
 shp_type = st.radio("Pilih tipe shapefile yang ingin dibuat:", ("Poligon (Polygon)", "Titik (Point)"))
 nama_file = st.text_input("➡️Masukkan nama file shapefile (tanpa ekstensi)⬅️", value="nama_shapefile")
+
 col1, col2, col3, col4 = st.columns(4)
 with col1:
     cek_sedimentasi = st.checkbox("Sedimentasi 🏖️")
@@ -121,136 +117,22 @@ if uploaded_file and nama_file:
     if shp_type == "Titik (Point)":
         geometry = [Point(xy) for xy in zip(df['longitude'], df['latitude'])]
         gdf = gpd.GeoDataFrame(df[['id']], geometry=geometry, crs="EPSG:4326")
-
-        if konservasi_gdf is not None:
-            joined = gpd.sjoin(gdf, konservasi_gdf[['NAMA_KK', 'geometry']], how='left', predicate='within')
-            points_in_konservasi = joined[~joined['NAMA_KK'].isna()]
-            if not points_in_konservasi.empty:
-                namobj_string = ", ".join(points_in_konservasi['NAMA_KK'].dropna().unique())
-                st.warning(f"{len(points_in_konservasi)} titik berada di dalam Kawasan Konservasi {namobj_string} ⚠️⚠️")
-            else:
-                st.success("Tidak ada titik yang berada di kawasan konservasi ✅✅")
-
-        if mil12_gdf is not None:
-            joined_mil = gpd.sjoin(gdf, mil12_gdf[['WP', 'geometry']], how='left', predicate='within')
-            points_in_mil = joined_mil[~joined_mil['WP'].isna()]
-            if not points_in_mil.empty:
-                wp_string = ", ".join(points_in_mil['WP'].dropna().unique())
-                st.success(f"{len(points_in_mil)} Titik berada di dalam wilayah 12 Mil Laut ✅✅")
-                st.write(f"Berada di Provinsi: {wp_string}")
-            else:
-                st.warning("Titik di luar wilayah 12 Mil Laut ⚠️⚠️")
-
-        if kkprl_gdf is not None:
-            joined_kkprl = gpd.sjoin(gdf, kkprl_gdf[["NO_KKPRL", "NAMA_SUBJ", "geometry"]], how='left', predicate='within')
-            points_in_kkprl = joined_kkprl[~joined_kkprl['NO_KKPRL'].isna()]
-            if not points_in_kkprl.empty:
-                st.warning(f"{len(points_in_kkprl)} Titik overlap dengan KKPRL terbit ⚠️⚠️")
-                st.write(points_in_kkprl[['id', 'NO_KKPRL', 'NAMA_SUBJ']])
-            else:
-                st.success("Titik tidak overlap dengan KKPRL terbit")
-
-        if sedimen_gdf is not None:
-            joined_sedimen = gpd.sjoin(gdf, sedimen_gdf[['geometry']], how='left', predicate='within')
-            points_in_sedimen = joined_sedimen[~joined_sedimen.index_right.isna()]
-            if not points_in_sedimen.empty:
-                st.success(f"{len(points_in_sedimen)} Titik berada di Lokasi Prioritas Sedimentasi ✅✅")
-            else:
-                st.warning("Titik diluar Lokasi Prioritas Sedimentasi ⚠️⚠️")
-                
-        if tambang_gdf is not None:
-            joined_tambang = gpd.sjoin(gdf, tambang_gdf[['nama_usaha','geometry']], how='left', predicate='within')
-            points_in_tambang = joined_tambang[~joined_tambang['nama_usaha'].isna()]
-            if not points_in_tambang.empty:
-                iup_string = ", ".join(points_in_tambang['nama_usaha'].dropna().unique())
-                st.success(f"{len(points_in_tambang)} Titik berada di dalam WIUP ✅✅")
-                st.write(f"Berada di WIUP milik: {iup_string}")
-            else:
-                st.warning("Titik di luar area WIUP ⚠️⚠️")    
-                
-        if migas_gdf is not None:
-            st.write(f"Jumlah fitur MIGAS: {len(migas_gdf)}")  # debug
-            joined_migas = gpd.sjoin(gdf, migas_gdf[['oprblk','geometry']], how='left', predicate='within')
-            points_in_migas = joined_migas[~joined_migas['oprblk'].isna()]
-            if not points_in_migas.empty:
-                oprblk_string = ", ".join(points_in_migas['oprblk'].dropna().unique())
-                st.success(f"{len(points_in_migas)} Titik berada di dalam Wilayah Kerja ✅✅")
-                st.write(f"Berada di Wilayah Kerja migas milik: {oprblk_string}")
-            else:
-                st.warning("Titik di luar area Wilayah Kerja migas ⚠️⚠️")   
-                
-        if rumpon_gdf is not None:
-            joined_rumpon = gpd.sjoin(gdf, rumpon_gdf[['ID_Rumpon','geometry']], how='left', predicate='within')
-            points_in_rumpon = joined_rumpon[~joined_rumpon['ID_Rumpon'].isna()]
-            if not points_in_rumpon.empty:
-                rumpon_string = ", ".join(points_in_rumpon['ID_Rumpon'].dropna().unique())
-                st.success(f"{len(points_in_rumpon)} Titik berada di dalam grid Rumpon ✅✅")
-                st.write(f"Berada di grid rumpon kode: {rumpon_string}")
-            else:
-                st.warning("Titik di luar area grid Rumpon ⚠️⚠️")  
     else:
         coords = list(zip(df['longitude'], df['latitude']))
         if coords[0] != coords[-1]:
             coords.append(coords[0])
         geometry = [Polygon(coords)]
         gdf = gpd.GeoDataFrame(pd.DataFrame({"id": ["polygon_1"]}), geometry=geometry, crs="EPSG:4326")
-
-        if konservasi_gdf is not None:
-            overlay_konservasi = gpd.overlay(gdf, konservasi_gdf[['NAMA_KK', 'geometry']], how='intersection')
-            if not overlay_konservasi.empty:
-                NAMA_KK_string = ", ".join(overlay_konservasi['NAMA_KK'].dropna().unique())
-                st.warning(f"Poligon berada di dalam Kawasan Konservasi {NAMA_KK_string} ⚠️⚠️")
-
-        if mil12_gdf is not None:
-            overlay_mil = gpd.overlay(gdf, mil12_gdf[['WP', 'geometry']], how='intersection')
-            if not overlay_mil.empty:
-                wp_string = ", ".join(overlay_mil['WP'].dropna().unique())
-                st.success(f"Poligon berada di dalam wilayah 12 Mil Laut: {wp_string} ✅✅")
-            else:
-                st.warning("Poligon di luar wilayah 12 Mil Laut ⚠️⚠️")
-
-        if kkprl_gdf is not None:
-            overlay_kkprl = gpd.overlay(gdf, kkprl_gdf[['NO_KKPRL', 'NAMA_SUBJ', 'geometry']], how='intersection')
-            if not overlay_kkprl.empty:
-                st.warning(f"Poligon Overlap dengan KKPRL Terbit ⚠️⚠️")
-                st.write(overlay_kkprl[['NO_KKPRL', 'NAMA_SUBJ']])
-            else:
-                st.success("Poligon tidak Overlap dengan KKPRL terbit")
-
-        if sedimen_gdf is not None:
-            overlay_sedimen = gpd.overlay(gdf, sedimen_gdf[['geometry']], how='intersection')
-            if not overlay_sedimen.empty:
-                st.success("Poligon berada di Lokasi Prioritas Sedimentasi ✅✅")
-            else:
-                st.warning("Poligon diuar Lokasi Prioritas Sedimentasi ⚠️⚠️")
     
-        if tambang_gdf is not None:
-            overlay_iup = gpd.overlay(gdf, tambang_gdf[['nama_usaha', 'geometry']], how='intersection')
-            if not overlay_iup.empty:
-                iup_string = ", ".join(overlay_iup['nama_usaha'].dropna().unique())
-                st.success(f"Poligon berada di dalam WIUP: {iup_string} ✅✅")
-            else:
-                st.warning("Poligon di luar WIUP ⚠️⚠️")
-                
-        if migas_gdf is not None:
-            overlay_migas = gpd.overlay(gdf, migas_gdf[['oprblk', 'geometry']], how='intersection')
-            if not overlay_migas.empty:
-                oprblk_string = ", ".join(overlay_migas['oprblk'].dropna().unique())
-                st.success(f"Poligon berada di dalam Wilayah Kerja Migas milik: {oprblk_string} ✅✅")
-            else:
-                st.warning("Poligon di luar Wilayah Kerja Migas ⚠️⚠️")
-                
-        if rumpon_gdf is not None:
-            overlay_rumpon = gpd.overlay(gdf, rumpon_gdf[['ID_Rumpon', 'geometry']], how='intersection')
-            if not overlay_rumpon.empty:
-                rumpon_string = ", ".join(overlay_rumpon['ID_Rumpon'].dropna().unique())
-                st.success(f"Poligon berada di area grid rumpon kode: {rumpon_string} ✅✅")
-            else:
-                st.warning("Poligon di luar grid rumpon ⚠️⚠️")
-    
+    # -------------------------
+    # Hasil Konversi & Tabel
+    # -------------------------
     st.subheader("Hasil Konversi")
     st.dataframe(df[['id', 'longitude', 'latitude']])
 
+    # -------------------------
+    # Unduh Shapefile ZIP
+    # -------------------------
     with tempfile.TemporaryDirectory() as tmpdirname:
         shp_path = os.path.join(tmpdirname, f"{nama_file}.shp")
         gdf.to_file(shp_path)
@@ -270,13 +152,7 @@ if uploaded_file and nama_file:
 
     if not gdf.empty:
         centroid = gdf.unary_union.centroid
-    if not isinstance(centroid, Point):
-        lon = gdf.geometry.centroid.x.mean()
-        lat = gdf.geometry.centroid.y.mean()
-        else:
-            lon, lat = centroid.x, centroid.y
-
-    m = folium.Map(location=[lat, lon], zoom_start=8, tiles="OpenStreetMap")
+        m = folium.Map(location=[centroid.y, centroid.x], zoom_start=8, tiles="OpenStreetMap")
 
         # Basemap Google Satellite
         folium.TileLayer(
@@ -314,9 +190,4 @@ if uploaded_file and nama_file:
         folium.LayerControl().add_to(m)
 
         st_map = st_folium(m, width=800, height=500)
-
-
-
-
-
 
