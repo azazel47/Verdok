@@ -4,10 +4,13 @@ import geopandas as gpd
 from shapely.geometry import Point, Polygon
 import tempfile
 import os
+import requests
+from io import BytesIO
 import json
 import datetime
 import zipfile
 import folium
+from shapely.geometry import Point as ShapelyPoint
 from streamlit_folium import st_folium
 
 def get_last_modified(filepath):
@@ -66,7 +69,7 @@ def load_kkprl_json():
 # Konfigurasi halaman
 st.set_page_config(
     page_title="Verdok - Konversi Koordinat",
-    page_icon="📝", 
+    page_icon="📝",
     layout="centered"
 )
 
@@ -92,7 +95,7 @@ with col3:
     cek_migas = st.checkbox("MIGAS🛢️")
 with col4:
     cek_rumpon = st.checkbox("Rumpon🪝")
-    
+
 konservasi_gdf = load_shapefile_local("data/Kawasan Konservasi 2022 update.shp")
 mil12_gdf = load_shapefile_local("data/12_Mil.shp")
 sedimen_gdf = load_shapefile_local("data/LokasiPrioritasPengumuman_15maret2024_AR.shp") if cek_sedimentasi else None
@@ -100,7 +103,6 @@ kkprl_gdf = load_kkprl_json()
 tambang_gdf = load_shapefile_local("data/IUP.shp") if cek_pertambangan else None
 migas_gdf = load_shapefile_local("data/MIGAS.shp") if cek_migas else None
 rumpon_gdf = load_shapefile_local("data/Rumpon_Full.shp") if cek_rumpon else None
-
 
 if uploaded_file and nama_file:
     df = pd.read_excel(uploaded_file)
@@ -123,16 +125,39 @@ if uploaded_file and nama_file:
             coords.append(coords[0])
         geometry = [Polygon(coords)]
         gdf = gpd.GeoDataFrame(pd.DataFrame({"id": ["polygon_1"]}), geometry=geometry, crs="EPSG:4326")
-    
-    # -------------------------
-    # Hasil Konversi & Tabel
-    # -------------------------
+
+    # tampilkan hasil konversi tabel
     st.subheader("Hasil Konversi")
     st.dataframe(df[['id', 'longitude', 'latitude']])
 
-    # -------------------------
-    # Unduh Shapefile ZIP
-    # -------------------------
+    # 🔹 Visualisasi peta
+    if not gdf.empty:
+        centroid = gdf.unary_union.centroid
+        if not isinstance(centroid, ShapelyPoint):
+            lon = gdf.geometry.centroid.x.mean()
+            lat = gdf.geometry.centroid.y.mean()
+        else:
+            lon, lat = centroid.x, centroid.y
+
+        if pd.isna(lon) or pd.isna(lat):
+            lon, lat = 118, -2.5  # fallback ke Indonesia
+
+        m = folium.Map(location=[lat, lon], zoom_start=6, tiles="OpenStreetMap")
+
+        valid_cols = [c for c in gdf.columns if c != "geometry"]
+        if valid_cols:
+            folium.GeoJson(
+                gdf,
+                name="Hasil Analisis",
+                tooltip=folium.GeoJsonTooltip(fields=valid_cols, aliases=valid_cols)
+            ).add_to(m)
+        else:
+            folium.GeoJson(gdf, name="Hasil Analisis").add_to(m)
+
+        st.subheader("Visualisasi Peta")
+        st_folium(m, width=700, height=500)
+
+    # 🔹 Export shapefile zip
     with tempfile.TemporaryDirectory() as tmpdirname:
         shp_path = os.path.join(tmpdirname, f"{nama_file}.shp")
         gdf.to_file(shp_path)
@@ -143,51 +168,4 @@ if uploaded_file and nama_file:
                 if os.path.exists(fpath):
                     zipf.write(fpath, arcname=os.path.basename(fpath))
         with open(zip_path, "rb") as f:
-            st.download_button("Unduh Shapefile (ZIP)", f, file_name=f"{nama_file}.zip")
-
-    # -------------------------
-    # Visualisasi Peta Folium
-    # -------------------------
-    st.subheader("Visualisasi Peta")
-
-    if not gdf.empty:
-        centroid = gdf.unary_union.centroid
-        m = folium.Map(location=[centroid.y, centroid.x], zoom_start=8, tiles="OpenStreetMap")
-
-        # Basemap Google Satellite
-        folium.TileLayer(
-            tiles="https://mt1.google.com/vt/lyrs=s&x={x}&y={y}&z={z}",
-            attr="Google Satellite",
-            name="Google Satellite",
-            overlay=False,
-            control=True
-        ).add_to(m)
-
-        # Basemap Google Hybrid
-        folium.TileLayer(
-            tiles="https://mt1.google.com/vt/lyrs=y&x={x}&y={y}&z={z}",
-            attr="Google Hybrid",
-            name="Google Hybrid",
-            overlay=False,
-            control=True
-        ).add_to(m)
-
-        # Ambil hanya kolom non-geometry untuk tooltip
-        valid_cols = [c for c in gdf.columns if c != "geometry"]
-
-        if valid_cols:
-            folium.GeoJson(
-                gdf,
-                name="Hasil Analisis",
-                tooltip=folium.GeoJsonTooltip(fields=valid_cols, aliases=valid_cols)
-            ).add_to(m)
-        else:
-            folium.GeoJson(
-                gdf,
-                name="Hasil Analisis"
-            ).add_to(m)
-
-        folium.LayerControl().add_to(m)
-
-        st_map = st_folium(m, width=800, height=500)
-
+            st.download_button("📥 Unduh Shapefile (ZIP)", f, file_name=f"{nama_file}.zip")
