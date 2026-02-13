@@ -1,0 +1,49 @@
+name: Update Permohonan JSON
+
+on:
+  schedule:
+    - cron: '0 1 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  update-json:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v3
+      with:
+        fetch-depth: 0
+
+    - name: Install jq
+      run: sudo apt-get install jq -y
+
+    - name: Request ArcGIS Token and Download Permhohonan JSON
+      run: |
+        TOKEN=$(curl -sk -X POST "https://arcgis.ruanglaut.id/arcgis/tokens/generateToken" \
+          -d "username=${{ secrets.ARCGIS_USER }}&password=${{ secrets.ARCGIS_PASSWORD }}&client=requestip&f=json" \
+          | jq -r .token)
+
+        if [ "$TOKEN" == "null" ] || [ -z "$TOKEN" ]; then
+          echo "❌ Gagal mendapatkan token dari ArcGIS"
+          exit 1
+        fi
+
+        echo "✅ Token berhasil didapat"
+        curl -k "https://arcgis.ruanglaut.id/arcgis/rest/services/KKPRL/PERMOHONAN_KKPRL/FeatureServer/1/query?where=1=1&outFields=*&returnGeometry=true&f=json&token=$TOKEN" -o kkprl.json
+
+    - name: Commit and push if permohonan.json changed
+      run: |
+        git config --global user.name "github-actions"
+        git config --global user.email "github-actions@users.noreply.github.com"
+        git add permohonan.json
+
+        if ! git diff --cached --quiet; then
+          git commit -m "Auto-update permohonan.json"
+          git push origin main
+        else
+          echo "✅ Tidak ada perubahan pada permohonan.json"
+        fi
