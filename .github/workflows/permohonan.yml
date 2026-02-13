@@ -33,7 +33,7 @@ jobs:
         fi
 
         echo "✅ Token berhasil didapat"
-        curl -k "https://arcgis.ruanglaut.id/arcgis/rest/services/KKPRL/PERMOHONAN_KKPRL/FeatureServer/1/query?where=1=1&outFields=*&returnGeometry=true&f=json&token=$TOKEN" -o kkprl.json
+        curl -k "https://arcgis.ruanglaut.id/arcgis/rest/services/KKPRL/PERMOHONAN_KKPRL/FeatureServer/1/query?where=1=1&outFields=*&returnGeometry=true&f=json&token=$TOKEN" -o permohonan.json
 
     - name: Commit and push if permohonan.json changed
       run: |
